@@ -1,0 +1,11 @@
+torch>=2
+torchaudio>=2
+faster-whisper==1.0.0
+transformers
+pandas
+setuptools>=65
+nltk
+pyannote.audio==3.1.1
+
+[dev]
+pytest

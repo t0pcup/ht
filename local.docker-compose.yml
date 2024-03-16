@@ -1,0 +1,100 @@
+version: '1'
+
+services:
+  service_asr:
+    env_file:
+      - .env
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: service_asr_container
+    cpus: 4.0
+    mem_limit: 5000MB
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    ports:
+      - "8003:8003"
+    cap_drop:
+      - all
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./:/app
+      - ./logs:/app/logs
+      - ./output:/app/output
+    command: ["uvicorn", "service_asr.api_faststream:app", "--host", "0.0.0.0", "--port", "8003"]
+    # command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      - GRACEFUL_TIMEOUT=300
+      - TIMEOUT=300
+    ipc: host
+    ulimits:
+      stack: 67108864
+      memlock: -1
+    restart: always
+    networks:
+      - mynetwork
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  service_convert:
+    env_file:
+      - .env
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: service_convert_container
+    cpus: 2.0
+    mem_limit: 4000MB
+    ports:
+      - "8002:8002"
+    cap_drop:
+      - all
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./:/app
+      - ./logs:/app/logs
+      - ./output:/app/output
+    command: ["uvicorn", "service_convert.api_faststream:app", "--host", "0.0.0.0", "--port", "8002"]
+    # command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      - GRACEFUL_TIMEOUT=300
+      - TIMEOUT=300
+    ipc: host
+    ulimits:
+      stack: 67108864
+      memlock: -1
+    restart: always
+    networks:
+      - mynetwork
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  minio:
+    image: minio/minio
+    command: server --console-address ":9001" /data/
+    container_name: ${SELF_MINIO_CONTAINER_NAME}
+    environment:
+      MINIO_ROOT_USER: "minioadmin"
+      MINIO_ROOT_PASSWORD: "minioadmin"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - mynetwork
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  mynetwork:
+    name: mynetwork
