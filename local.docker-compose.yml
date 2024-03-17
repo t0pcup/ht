@@ -39,7 +39,7 @@ services:
       memlock: -1
     restart: always
     networks:
-      - mynetwork
+      - stenagrafist
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -74,7 +74,7 @@ services:
   #     memlock: -1
   #   restart: always
   #   networks:
-  #     - mynetwork
+  #     - stenagrafist
   #   extra_hosts:
   #     - "host.docker.internal:host-gateway"
 
@@ -89,10 +89,11 @@ services:
       - "9000:9000"
       - "9001:9001"
     networks:
-      - mynetwork
+      - stenagrafist
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
 networks:
-  mynetwork:
-    name: mynetwork
+  stenagrafist:
+    name: stenagrafist
+    external: True

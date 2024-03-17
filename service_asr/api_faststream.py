@@ -1,4 +1,9 @@
+from contextlib import contextmanager
+import os
+import tempfile
 from typing import List
+import aiohttp
+from anyio import sleep
 from tqdm import tqdm
 from loguru import logger
 from config import config
@@ -6,6 +11,7 @@ from fastapi import FastAPI, HTTPException, status, UploadFile, File
 from models.api_models import DiarizedSegment, OrderOut
 from utils.whisper_utils import whisp
 from miniopy_async import Minio
+import shutil
 
 client = Minio(
     "host.docker.internal:9000",
@@ -23,13 +29,24 @@ logger.add(
 app = FastAPI()
 
 
-async def get_obj(minio_path: str):
-    # TODO: скачать файл в формате mp3 локально
-    # TODO: дергать ручку сервиса 1
-    audio_path = "".join(minio_path.split("/")[:-1])
-    await client.fget_object(config.MINIO_BUCKET, minio_path, audio_path)
+# async def get_obj(minio_path: str):
+#     # TODO: скачать файл в формате mp3 локально
+#     # TODO: дергать ручку сервиса 1
+#     audio_path = "".join(minio_path.split("/")[:-1])
+#     await client.fget_object(config.MINIO_BUCKET, minio_path, audio_path)
 
-    yield audio_path
+#     yield audio_path
+
+
+@contextmanager
+def tmp_image_folder():
+    """Генерирует уникальную временную папку, при выходе удаляет папку и ее содержимое."""
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        yield tmp_dir
+    finally:
+        if os.path.exists(tmp_dir):
+            shutil.rmtree(tmp_dir)
 
 
 @app.post("/transcribe_file/")
@@ -37,22 +54,24 @@ async def transcribe_file(
     order_id: int, file: UploadFile = File(...)
 ) -> OrderOut:
     # TODO: save file?
-    audio_path = "audio.mp3"
-    with open(audio_path, "wb") as buffer:
-        buffer.write(await file.read())
-    try:
-        audio = whisp.module.load_audio(audio_path)
-        result = whisp.model.transcribe(
-            audio, batch_size=config.BATCH_SIZE, language=config.RU
-        )
-        logger.info(f"Segmented to {len(result['segments'])} raw lines")
-    except Exception as e:
-        # TODO: write status to DB "error"
-        logger.error(f"Segmentation whisperx error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal Server Error",
-        )
+    audio_path = None
+    with tmp_image_folder() as tmp_dir:
+        audio_path = f"{tmp_dir}/audio_path.mp3"
+        with open(audio_path, "wb") as f:
+            f.write(await file.read())
+        try:
+            audio = whisp.module.load_audio(audio_path)
+            result = whisp.model.transcribe(
+                audio, batch_size=config.BATCH_SIZE, language=config.RU
+            )
+            logger.info(f"Segmented to {len(result['segments'])} raw lines")
+        except Exception as e:
+            # TODO: write status to DB "error"
+            logger.error(f"Segmentation whisperx error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal Server Error",
+            )
 
     try:
         logger.info("Aligning...")
@@ -76,7 +95,9 @@ async def transcribe_file(
     try:
         logger.info("Diarizing...")
         diarize_segments = whisp.diarize_model(audio)
-        result = whisp.module.assign_word_speakers(diarize_segments, result)["segments"]
+        result = whisp.module.assign_word_speakers(
+            diarize_segments, result
+        )["segments"]
         segments = []
         for line in tqdm(result, desc="Formatting"):
             if "words" in line:
@@ -94,14 +115,3 @@ async def transcribe_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
         )
-
-
-# @router.subscriber(rabbit_input_queue)
-# async def queue(data: InputData):
-#     data.data_path
-#     raise HTTPException(
-#         status_code=status.HTTP_400_BAD_REQUEST,
-#         detail="Wrong service name",
-#     )
-
-# app.include_router(router)

@@ -1,5 +1,6 @@
 FROM python:3.9.16-slim-bullseye
 
+ARG APP_FOLDER=/app
 
 WORKDIR /app
 
