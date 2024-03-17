@@ -30,7 +30,6 @@ services:
       - ./logs:/app/logs
       - ./output:/app/output
     command: ["uvicorn", "service_asr.api_faststream:app", "--host", "0.0.0.0", "--port", "8003"]
-    # command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       - GRACEFUL_TIMEOUT=300
       - TIMEOUT=300
@@ -66,7 +65,6 @@ services:
       - ./logs:/app/logs
       - ./output:/app/output
     command: ["uvicorn", "service_convert.api_faststream:app", "--host", "0.0.0.0", "--port", "8002"]
-    # command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       - GRACEFUL_TIMEOUT=300
       - TIMEOUT=300

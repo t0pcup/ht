@@ -111,48 +111,6 @@ class GlobalConfig(BaseSettings):
         "COMPUTE_TYPE", cast=str, default=os.environ.get("COMPUTE_TYPE")
     )
 
-    @property
-    def rabbitmq_url(self) -> str:
-        amqp_dsn = AmqpDsn(
-            f"amqp://{self.RABBITMQ_USERNAME}:{self.RABBITMQ_PASSWORD}@{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}"
-        )
-        return amqp_dsn.__str__()
-
-    # Postgres config
-    POSTGRES_HOST: str = getenv(
-        "POSTGRES_HOST",
-        cast=str,
-        default=os.environ.get("POSTGRES_HOST"),
-    )
-    POSTGRES_PORT: str = getenv(
-        "POSTGRES_PORT",
-        cast=str,
-        default=os.environ.get("POSTGRES_PORT"),
-    )
-    POSTGRES_USER: str = getenv(
-        "POSTGRES_USER",
-        cast=str,
-        default=os.environ.get("POSTGRES_USER"),
-    )
-    POSTGRES_PASSWORD: str = getenv(
-        "POSTGRES_PASSWORD",
-        cast=str,
-        default=os.environ.get("POSTGRES_PASSWORD"),
-    )
-    POSTGRES_DATABASE_NAME: str = getenv(
-        "POSTGRES_DATABASE_NAME",
-        cast=str,
-        default=os.environ.get("POSTGRES_DATABASE_NAME"),
-    )
-    PG_DB_URL: str = (
-        f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DATABASE_NAME}"
-    )
-    POSTGRES_SCHEMA_NAME: str = getenv(
-        "POSTGRES_SCHEMA_NAME",
-        cast=str,
-        default=os.environ.get("POSTGRES_SCHEMA_NAME"),
-    )
-
 
 # @lru_cache()
 def get_configuration():
