@@ -19,6 +19,9 @@ logger.add(
 app = FastAPI()
 
 
+# TODO: puy into service 1
+# TODO: в сервис 1 впилить проверку на окончание файла и преобразование
+# moviepy==1.0.3
 @app.post("/check_convert/", status_code=status.HTTP_200_OK)
 async def check_convert(data: ConvertData):
     order = data.value

@@ -36,7 +36,7 @@ def use_gpt_for_questions(text: str, question: str):
         }""" + f"""\nQuestion:\n{question}\n\nText:\n"""
         # If you didn't find the answer, you may return {"answer": ""}.
 
-        text = text.strip()  #.replace("\n", " ")
+        text = text.strip()  # .replace("\n", " ")
         while "  " in text:
             text = text.replace("  ", " ")
         text = text[:30000]  # setting max content length
