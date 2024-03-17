@@ -16,6 +16,18 @@ RUN git clone https://github.com/m-bain/whisperX.git && cd whisperX && pip insta
 
 COPY requirements.txt requirements.txt
 
+ARG APP_USER=otp_user
+ARG APP_GROUP=otp_group
+ARG APP_USER_UID=999
+
+RUN groupadd --gid ${APP_USER_UID} --system ${APP_GROUP} && \
+    useradd --uid ${APP_USER_UID} \
+            --gid ${APP_GROUP} \
+            --no-create-home \
+            --system \
+            --shell /bin/false \
+            ${APP_USER}
+
 RUN apt install ffmpeg -y && apt install --no-install-recommends -y \
         libgl1 \
         gcc \
