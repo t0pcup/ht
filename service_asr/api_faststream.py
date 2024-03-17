@@ -2,8 +2,8 @@ from typing import List
 from tqdm import tqdm
 from loguru import logger
 from config import config
-from fastapi import FastAPI, HTTPException, status
-from models.api_models import DiarizedSegment, Order
+from fastapi import FastAPI, HTTPException, status, UploadFile, File
+from models.api_models import DiarizedSegment, OrderOut
 from utils.whisper_utils import whisp
 from miniopy_async import Minio
 
@@ -33,17 +33,13 @@ async def get_obj(minio_path: str):
 
 
 @app.post("/transcribe_file/")
-async def transcribe_file(data: Order) -> List[DiarizedSegment]:
-    try:
-        audio_path = await get_obj(data.file_path)
-    except Exception as e:
-        # TODO: write status to DB "error"
-        logger.error(f"Segmentation whisperx error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal Server Error",
-        )
-
+async def transcribe_file(
+    order_id: int, file: UploadFile = File(...)
+) -> OrderOut:
+    # TODO: save file?
+    audio_path = "audio.mp3"
+    with open(audio_path, "wb") as buffer:
+        buffer.write(await file.read())
     try:
         audio = whisp.module.load_audio(audio_path)
         result = whisp.model.transcribe(
@@ -80,9 +76,7 @@ async def transcribe_file(data: Order) -> List[DiarizedSegment]:
     try:
         logger.info("Diarizing...")
         diarize_segments = whisp.diarize_model(audio)
-        result = whisp.module.assign_word_speakers(diarize_segments, result)[
-            "segments"
-        ]
+        result = whisp.module.assign_word_speakers(diarize_segments, result)["segments"]
         segments = []
         for line in tqdm(result, desc="Formatting"):
             if "words" in line:
@@ -92,7 +86,7 @@ async def transcribe_file(data: Order) -> List[DiarizedSegment]:
         logger.info(f"Speakers assigned for {len(segments)} segments")
         # TODO: write status to DB "ready"
         # TODO: segments should be written to DataBase
-        return segments
+        return OrderOut(order_id=order_id, segments=segments)
     except Exception as e:
         # TODO: write status to DB "error"
         logger.error(f"Diarizing whisperx error: {e}")

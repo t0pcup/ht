@@ -1,6 +1,6 @@
 from loguru import logger
 from config import config
-import whisperx
+from utils import whisperx
 
 
 class Whisp:

@@ -7,7 +7,7 @@ RUN /usr/local/bin/python -m pip install --upgrade pip
 
 RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
-RUN apt update && apt install git -y
+RUN apt-get update && apt update && apt install git -y
 
 RUN pip install git+https://github.com/m-bain/whisperx.git
 
