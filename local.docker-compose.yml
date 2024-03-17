@@ -43,40 +43,40 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  service_convert:
-    env_file:
-      - .env
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    container_name: service_convert_container
-    cpus: 2.0
-    mem_limit: 4000MB
-    ports:
-      - "8002:8002"
-    cap_drop:
-      - all
-    cap_add:
-      - SYS_PTRACE
-    security_opt:
-      - no-new-privileges:true
-    volumes:
-      - ./:/app
-      - ./logs:/app/logs
-      - ./output:/app/output
-    command: ["uvicorn", "service_convert.api_faststream:app", "--host", "0.0.0.0", "--port", "8002"]
-    environment:
-      - GRACEFUL_TIMEOUT=300
-      - TIMEOUT=300
-    ipc: host
-    ulimits:
-      stack: 67108864
-      memlock: -1
-    restart: always
-    networks:
-      - mynetwork
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+  # service_convert:
+  #   env_file:
+  #     - .env
+  #   build: 
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: service_convert_container
+  #   cpus: 2.0
+  #   mem_limit: 4000MB
+  #   ports:
+  #     - "8002:8002"
+  #   cap_drop:
+  #     - all
+  #   cap_add:
+  #     - SYS_PTRACE
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   volumes:
+  #     - ./:/app
+  #     - ./logs:/app/logs
+  #     - ./output:/app/output
+  #   command: ["uvicorn", "service_convert.api_faststream:app", "--host", "0.0.0.0", "--port", "8002"]
+  #   environment:
+  #     - GRACEFUL_TIMEOUT=300
+  #     - TIMEOUT=300
+  #   ipc: host
+  #   ulimits:
+  #     stack: 67108864
+  #     memlock: -1
+  #   restart: always
+  #   networks:
+  #     - mynetwork
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
 
   minio:
     image: minio/minio

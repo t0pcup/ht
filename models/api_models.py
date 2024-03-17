@@ -8,11 +8,6 @@ class DiarizedSegment(BaseModel):
     end: float
 
 
-class InputData(BaseModel):
-    order_id: int
-    data_path: str
-
-
 class Order(BaseModel):
     order_id: int
     file_path: str

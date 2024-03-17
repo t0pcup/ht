@@ -3,7 +3,7 @@ from tqdm import tqdm
 from loguru import logger
 from config import config
 from fastapi import FastAPI, HTTPException, status
-from models.api_models import DiarizedSegment, InputData
+from models.api_models import DiarizedSegment, Order
 from utils.whisper_utils import whisp
 from miniopy_async import Minio
 
@@ -25,6 +25,7 @@ app = FastAPI()
 
 async def get_obj(minio_path: str):
     # TODO: скачать файл в формате mp3 локально
+    # TODO: дергать ручку сервиса 1
     audio_path = "".join(minio_path.split("/")[:-1])
     await client.fget_object(config.MINIO_BUCKET, minio_path, audio_path)
 
@@ -32,9 +33,9 @@ async def get_obj(minio_path: str):
 
 
 @app.post("/transcribe_file/")
-async def transcribe_file(data: InputData) -> List[DiarizedSegment]:
+async def transcribe_file(data: Order) -> List[DiarizedSegment]:
     try:
-        audio_path = await get_obj(data.data_path)
+        audio_path = await get_obj(data.file_path)
     except Exception as e:
         # TODO: write status to DB "error"
         logger.error(f"Segmentation whisperx error: {e}")
